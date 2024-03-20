@@ -1,0 +1,8 @@
+"resistancerp"
+{
+	"base"		"base"
+	"title"		"ResistanceRP"
+	"maps"		""
+	"category"	"rp"
+	"menusystem"	"1"
+}
