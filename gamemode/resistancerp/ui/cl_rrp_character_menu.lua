@@ -25,8 +25,7 @@ function PANEL:Init()
 
     -- Calculate the button width to fill the container horizontally with spacing
     local buttonWidth = (characterSlotContainer:GetWide() - 15 * 4) / 3 -- Adjust spacing as necessary
-    local iconVerticalPos = (characterSlotContainer:GetTall() - 32) / 2 -- Adjust 32 to the actual height of the icon
-
+    local iconVerticalPos = (characterSlotContainer:GetTall() - 64) / 2 -- Adjust icon size
 
     -- Add a for loop to create three buttons horizontally
     for i = 1, 3 do
@@ -45,7 +44,6 @@ function PANEL:Init()
         characterSlotButton.DoClick = function()
             local characterCreator = vgui.Create("ResistanceRP.CharacterCreator")
             self:Remove()
-            ResistanceRP.Print("Loading Character Creator")
         end
 
         local iconImage = vgui.Create("DImage", characterSlotButton)

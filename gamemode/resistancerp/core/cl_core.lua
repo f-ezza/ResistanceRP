@@ -1,92 +1,124 @@
-ResistanceRP.Client = ResistanceRP.Client or {}
-ResistanceRP.LoadedImages = ResistanceRP.LoadedImages or {}
-file.CreateDir("resistancerp")
-file.CreateDir("resistancerp/images")
+-- Define ResistanceRP table if not already defined
+local ResistanceRP = ResistanceRP or {}
+ResistanceRP.Client = ResistanceRP.Client or {} -- Initialize Client table if not already initialized
+ResistanceRP.LoadedImages = ResistanceRP.LoadedImages or {} -- Initialize LoadedImages table if not already initialized
 
---Local Functions
+-- Create necessary directories if they do not exist
+file.CreateDir("resistancerp")
+file.CreateDir("resistancerp/images/")
+
+-- Function to clear all panels from the world panel
 local function ClearAllPanels()
-    for _, panel in pairs(vgui.GetWorldPanel():GetChildren()) do
+    for _, panel in ipairs(vgui.GetWorldPanel():GetChildren()) do
         if IsValid(panel) and panel:IsVisible() then
             panel:Remove()
         end
     end
 end
 
+-- Function to set up introduction panel
 local function SetupIntroduction()
-    local introduction = vgui.Create("ResistanceRP.Introduction")
+    vgui.Create("ResistanceRP.Introduction")
 end
 
+-- Function to load main menu panel
 local function LoadMainMenu()
-    local mainMenu = vgui.Create("ResistanceRP.MainMenu")
+    vgui.Create("ResistanceRP.MainMenu")
 end
 
-function ResistanceRP.FetchImage(id, callback, instant)
+-- Function to fetch image from URL
+local function FetchImage(id, callback, instant)
 	local loadedImage = ResistanceRP.LoadedImages[id]
 	if (loadedImage) then
 		callback(loadedImage)
 		return
 	end
 
-    http.Fetch("https://i.imgur.com/" .. id .. ".png", function (body, size, headers, code)
-        if (code != 200) then
-            callback(false)
-            return
-        end
+	if (file.Exists("resistancerp/images/" .. id .. ".png", "DATA")) then
+		local mat = Material("data/resistancerp/images/"..id..".png", "noclamp smooth")
+        if (!mat) then
+			-- prevent memory leaks
+			mat = Material("content/materials/models/player/black.vtf")
+		end
+		ResistanceRP.LoadedImages[id] = mat
+        callback(mat)
+	else
+		http.Fetch("https://i.imgur.com/" .. id .. ".png", function (body, size, headers, code)
+			if (code != 200) then
+				callback(false)
+				return
+			end
 
-        if (!body or body == "") then 
-            callback(false)
-            return 
-        end
+			if (!body or body == "") then 
+				callback(false)
+				return 
+			end
 
 
-        file.Write("resistancerp/images/" .. id .. ".png", body)
-        local mat = Material("data/resistancerp/images/" .. id .. ".png", "noclamp smooth")
-        ResistanceRP.LoadedImages[id] = mat
-        if (!instant) then
-            callback(mat)
-        end
-    end, function ()
-        callback(false)
-    end)
+			file.Write("resistancerp/images/" .. id .. ".png", body)
+			local mat = Material("data/resistancerp/images/"..id..".png", "noclamp smooth")
+			ResistanceRP.LoadedImages[id] = mat
+			if (!instant) then
+				callback(mat)
+			end
+		end, function ()
+			callback(false)
+		end)
+	end
 end
 
+-- Function to set material for an image panel from image ID
 function ResistanceRP.GetMaterialFromImage(icon, val)
     icon:SetMaterial(nil)
-    if (#val > 3) then
-        ResistanceRP.FetchImage(val, function (mat)
-            if (!mat) then return end
-            icon:SetMaterial(mat)
+    if #val > 3 then
+        FetchImage(val, function(mat)
+            if mat then
+                icon:SetMaterial(mat)
+            end
         end)
     end
 end
 
-function GM:InitPostEntity()
-    ResistanceRP.Print("Loaded!")
-    net.Start("ResistanceRP.CreateNewUser")
-    net.SendToServer()
-end
-
+-- List of HUD elements to be disabled
 local disabledHUD = {
     ["CHudHealth"] = true,
     ["CHudBattery"] = true,
 }
 
--- Define the HUDShouldDraw hook function
+function GM:InitPostEntity()
+    net.Start("ResistanceRP.CreateNewUser")
+    net.SendToServer()
+end
+
+-- Hook to control visibility of HUD elements
 hook.Add("HUDShouldDraw", "HideDisabledHUD", function(name)
-    -- Check if the current HUD element should be disabled
     if disabledHUD[name] then
         return false
     end
 end)
 
-net.Receive("ResistanceRP.Debug.RemovePanels", ClearAllPanels)
-net.Receive("ResistanceRP.LoadMainMenu", LoadMainMenu)
-net.Receive("ResistanceRP.SendPlayerInfo", function()
+-- Function to handle receiving debug remove panels message
+local function OnReceiveDebugRemovePanels()
+    ClearAllPanels()
+end
+
+-- Function to handle receiving load main menu message
+local function OnReceiveLoadMainMenu()
+    LoadMainMenu()
+end
+
+-- Function to handle receiving player info message
+local function OnReceiveSendPlayerInfo()
     ResistanceRP.Client = net.ReadTable()
-    if(ResistanceRP.Client.playIntroduction) then
+    if ResistanceRP.Client.playIntroduction then
         LoadMainMenu()
         SetupIntroduction()
     else
         LoadMainMenu()
     end
-end)
+end
+
+-- Listen for network messages and attach appropriate handlers
+net.Receive("ResistanceRP.Debug.RemovePanels", OnReceiveDebugRemovePanels)
+net.Receive("ResistanceRP.LoadMainMenu", OnReceiveLoadMainMenu)
+net.Receive("ResistanceRP.SendPlayerInfo", OnReceiveSendPlayerInfo)

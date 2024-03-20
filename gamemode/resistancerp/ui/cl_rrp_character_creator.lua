@@ -1,100 +1,122 @@
+-- Define a new panel named "ResistanceRP.CharacterCreator" inheriting from "DPanel"
 local PANEL = {}
 
+-- Initialize the panel
 function PANEL:Init()
+    -- Set the size of the panel to cover the entire screen
     self:SetSize(ScrW(), ScrH())
+    -- Center the panel on the screen
     self:Center()
+    -- Make the panel appear on top of other panels
     self:MakePopup()
+    -- Set the background color of the panel
     self:SetBackgroundColor(ResistanceRP.Colors.Background)
 
+    -- Create and configure header text
     local headerText = vgui.Create("DLabel", self)
     headerText:SetText("ResistanceRP 1943")
     headerText:SetFont("ResistanceRP.36N")
     headerText:SizeToContents()
     headerText:SetPos(ScrW() * 0.025, ScrH() * 0.05)
 
+    -- Create and configure secondary header text
     local secondaryHeaderText = vgui.Create("DLabel", self)
     secondaryHeaderText:SetText("Character Creator")
     secondaryHeaderText:SetFont("ResistanceRP.32N")
     secondaryHeaderText:SizeToContents()
     secondaryHeaderText:SetPos(ScrW() * 0.025, ScrH() * 0.1)
 
+    -- Create a container for character slots
     local characterSlotContainer = vgui.Create("EditablePanel", self)
     characterSlotContainer:SetSize(ScrW() * 0.85, ScrH() * 0.70)
     characterSlotContainer:Center()
     characterSlotContainer:MakePopup()
     characterSlotContainer.Paint = function(self, w, h)
-        draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.BackgroundSecondary) -- Draw a colored rectangle for the background
+        draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.BackgroundSecondary)
     end
 
+    -- Display factions in the character slot container
     self:DisplayFactions(characterSlotContainer)
 end
 
+-- Function to display factions
 function PANEL:DisplayFactions(characterSlotContainer)
-    -- Calculate the button width to fill the container horizontally with spacing
-    local buttonWidth = (characterSlotContainer:GetWide() - 15 * 4) / 3 -- Adjust spacing as necessary
+    -- Calculate button width to fill the container horizontally with spacing
+    local buttonWidth = (characterSlotContainer:GetWide() - 15 * 4) / 3
 
-    -- Add a for loop to create three buttons horizontally
+    -- Iterate over factions and create buttons for each
     for faction, factionData in pairs(ResistanceRP.Factions) do
+        -- Create a panel for the faction button
         local characterSlotButton = vgui.Create("DPanel", characterSlotContainer)
-        characterSlotButton:SetWide(buttonWidth) -- Set the width of the button
-        characterSlotButton:Dock(LEFT) -- Dock buttons to the left side of the container
-        characterSlotButton:DockMargin(15, 15, 0, 15) -- Add spacing between buttons
+        characterSlotButton:SetWide(buttonWidth)
+        characterSlotButton:Dock(LEFT)
+        characterSlotButton:DockMargin(15, 15, 0, 15)
         
+        -- Create label for faction name
         local buttonText = vgui.Create("DLabel", characterSlotButton)
-        buttonText:SetText(factionData.dName) -- Set the text
+        buttonText:SetText(factionData.dName)
         buttonText:SetFont("ResistanceRP.34N")
         buttonText:SizeToContents()
-        buttonText:SetContentAlignment(5) -- Center the text horizontally
-        buttonText:Dock(TOP) -- Dock the text label to the top of the panel
+        buttonText:SetContentAlignment(5)
+        buttonText:Dock(TOP)
         buttonText.Paint = function(self, w, h)
-            draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background) -- Background color
+            draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background)
         end
 
+        -- Create icon button for faction
         local iconButton = vgui.Create("DImageButton", characterSlotButton)
-        iconButton:Dock(FILL) -- Dock the image button to fill the remaining space in the panel
-        ResistanceRP.GetMaterialFromImage(iconButton, factionData.icon) -- Fetch and set the image from Imgur
+        iconButton:Dock(FILL)
+        ResistanceRP.GetMaterialFromImage(iconButton, factionData.icon)
         iconButton.Paint = function(self, w, h)
-            draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background) -- Background color
+            draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background)
         end
+
+        -- Define behavior when the faction button is clicked
         iconButton.DoClick = function()
             if(factionData.SubFactions != nil) then
                 characterSlotContainer:Clear()
                 self:DisplaySubFactions(characterSlotContainer, factionData.SubFactions)
             else
                 characterSlotContainer:Clear()
-                self:CreateNewCharacter(factionData.ranks[0], characterSlotContainer)
+                self:CreateNewCharacter(factionData, characterSlotContainer)
             end
         end
     end
 end
 
+-- Function to display sub-factions
 function PANEL:DisplaySubFactions(characterSlotContainer, subFactions)
-    -- Calculate the button width to fill the container horizontally with spacing
-    local buttonWidth = (characterSlotContainer:GetWide() - 15 * 4) / 2 -- Adjust spacing as necessary
+    -- Calculate button width to fill the container horizontally with spacing
+    local buttonWidth = (characterSlotContainer:GetWide() - 15 * 4) / 2
 
-    -- Add a for loop to create three buttons horizontally
+    -- Iterate over sub-factions and create buttons for each
     for faction, factionData in pairs(subFactions) do
+        -- Create a panel for the sub-faction button
         local characterSlotButton = vgui.Create("DPanel", characterSlotContainer)
-        characterSlotButton:SetWide(buttonWidth) -- Set the width of the button
-        characterSlotButton:Dock(LEFT) -- Dock buttons to the left side of the container
-        characterSlotButton:DockMargin(15, 15, 0, 15) -- Add spacing between buttons
+        characterSlotButton:SetWide(buttonWidth)
+        characterSlotButton:Dock(LEFT)
+        characterSlotButton:DockMargin(15, 15, 0, 15)
         
+        -- Create label for sub-faction name
         local buttonText = vgui.Create("DLabel", characterSlotButton)
-        buttonText:SetText(factionData.dName) -- Set the text
+        buttonText:SetText(factionData.dName)
         buttonText:SetFont("ResistanceRP.34N")
         buttonText:SizeToContents()
-        buttonText:SetContentAlignment(5) -- Center the text horizontally
-        buttonText:Dock(TOP) -- Dock the text label to the top of the panel
+        buttonText:SetContentAlignment(5)
+        buttonText:Dock(TOP)
         buttonText.Paint = function(self, w, h)
-            draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background) -- Background color
+            draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background)
         end
 
+        -- Create icon button for sub-faction
         local iconButton = vgui.Create("DImageButton", characterSlotButton)
-        iconButton:Dock(FILL) -- Dock the image button to fill the remaining space in the panel
-        ResistanceRP.GetMaterialFromImage(iconButton, factionData.icon) -- Fetch and set the image from Imgur
+        iconButton:Dock(FILL)
+        ResistanceRP.GetMaterialFromImage(iconButton, factionData.icon)
         iconButton.Paint = function(self, w, h)
-            draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background) -- Background color
+            draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background)
         end
+
+        -- Define behavior when the sub-faction button is clicked
         iconButton.DoClick = function()
             characterSlotContainer:Clear()
             self:CreateNewCharacter(factionData, characterSlotContainer)
@@ -102,28 +124,32 @@ function PANEL:DisplaySubFactions(characterSlotContainer, subFactions)
     end
 end
 
+-- Function to create a new character
 function PANEL:CreateNewCharacter(factionData, characterSlotContainer)
+    PrintTable(factionData)
+    -- Create form panel for character details
     local formPanel = vgui.Create("EditablePanel", characterSlotContainer)
-    formPanel:SetWide(characterSlotContainer:GetWide() * 0.575) -- Adjust the width as needed
+    formPanel:SetWide(characterSlotContainer:GetWide() * 0.575)
     formPanel:Dock(LEFT)
     formPanel:DockMargin(10, 10, 10, 10)
     formPanel.Paint = function(self, w, h)
-        draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background) -- Draw a colored rectangle for the background
+        draw.RoundedBox(0, 0, 0, w, h, ResistanceRP.Colors.Background)
     end
 
+    -- Create model panel for character preview
     local modelPanel = vgui.Create("DPanel", characterSlotContainer)
-    modelPanel:SetWide(characterSlotContainer:GetWide() * 0.4) -- Adjust the width as needed
+    modelPanel:SetWide(characterSlotContainer:GetWide() * 0.4)
     modelPanel:Dock(RIGHT)
     modelPanel:DockMargin(10, 10, 10, 10)
     modelPanel:SetBackgroundColor(ResistanceRP.Colors.Background)
 
-    -- Form Input Section
+    -- Create form inputs for character attributes
     local nameLabel = vgui.Create("DLabel", formPanel)
     nameLabel:SetText("Name:")
     nameLabel:SetFont("ResistanceRP.24N")
     nameLabel:SetTextColor(ResistanceRP.Colors.Text)
     nameLabel:Dock(TOP)
-    nameLabel:DockMargin(15,15,15,0)
+    nameLabel:DockMargin(15, 15, 15, 0)
     
     local nameEntry = vgui.Create("DTextEntry", formPanel)
     nameEntry:Dock(TOP)
@@ -219,10 +245,10 @@ function PANEL:CreateNewCharacter(factionData, characterSlotContainer)
 
     local modelDropdown = vgui.Create("DComboBox", modelPanel)
     modelDropdown:Dock(BOTTOM)
-    for k, v in ipairs(factionData.playerModels) do
+    for k, v in ipairs(factionData.ranks[0].playerModels) do
         modelDropdown:AddChoice(v)
     end
-    modelViewer:SetModel(factionData.playerModels[1])
+    modelViewer:SetModel(factionData.ranks[0].playerModels[1])
     modelDropdown.OnSelect = function(self, index, value, data)
         modelViewer:SetModel(value)
     end
@@ -239,6 +265,7 @@ function PANEL:CreateNewCharacter(factionData, characterSlotContainer)
         surface.SetDrawColor(ResistanceRP.Colors.Border)
         surface.DrawOutlinedRect(0, 0, w, h) 
     end
+
     createCharacterButton.DoClick = function()
         local name = nameEntry:GetText()
         local age = tonumber(ageEntry:GetText())
@@ -247,6 +274,7 @@ function PANEL:CreateNewCharacter(factionData, characterSlotContainer)
         local hairColor = hairColorComboBox:GetValue()
         local description = descriptionEntry:GetText()
         local playerModel = modelViewer:GetModel()
+        local factionName = factionData.idName
     
         -- Check if name has at least two words
         local nameWords = {}
@@ -278,6 +306,7 @@ function PANEL:CreateNewCharacter(factionData, characterSlotContainer)
             Derma_Message("You already have a character called this!", "Error", "OK")
             return
         end
+        print(factionName)
         ResistanceRP.Client.characters[name] = {
             charName = name,
             charAge = age,
@@ -286,7 +315,7 @@ function PANEL:CreateNewCharacter(factionData, characterSlotContainer)
             charHair = hairColor,
             charDesc = description,
             charPlayermodel = playerModel,
-            charFaction = factionData.idName
+            charFaction = factionName,
         }
         net.Start("ResistanceRP.CreateCharacter")
             net.WriteString(name)
@@ -294,9 +323,9 @@ function PANEL:CreateNewCharacter(factionData, characterSlotContainer)
             net.WriteString(eyeColor)
             net.WriteString(bloodType)
             net.WriteString(hairColor)
-            net.WriteString(description)
+            net.WriteString(description)    
             net.WriteString(playerModel)
-            net.WriteString(charFaction)
+            net.WriteString(factionName)
         net.SendToServer()
         if(ResistanceRP.Client.Playing != nil) then ResistanceRP.Client.Playing:Stop() end
         ResistanceRP.Client.activeCharacter = ResistanceRP.Client.characters[name]
@@ -307,3 +336,4 @@ end
 
 
 vgui.Register("ResistanceRP.CharacterCreator", PANEL, "DPanel")
+

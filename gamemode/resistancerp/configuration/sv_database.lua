@@ -12,9 +12,6 @@ db = mysqloo.connect(ResistanceRP.Database.DatabaseHostname, ResistanceRP.Databa
 
 function db:onConnected()
     ResistanceRP.Print("Successfully connected to database: "..ResistanceRP.Database.DatabaseName)
-
-    local query = self:query("CREATE TABLE IF NOT EXISTS RRP_Players (playerID VARCHAR(17) PRIMARY KEY, characters TEXT, playIntroduction BOOLEAN)")
-    query:start()
 end
 
 function db:onConnectionFailed( err )

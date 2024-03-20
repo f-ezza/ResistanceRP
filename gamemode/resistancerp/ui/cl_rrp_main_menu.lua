@@ -32,6 +32,10 @@ function PANEL:Init()
         if buttonText == "Load Character" then
             self:Remove()
             if(ResistanceRP.Client.Playing != nil) then ResistanceRP.Client.Playing:Stop() end
+            ResistanceRP.Client.activeCharacter = ResistanceRP.Client.characters[0]
+            net.Start("ResistanceRP.UpdateActiveCharacter")
+                net.WriteString(ResistanceRP.Client.activeCharacter.name)
+            net.SendToServer()
             customView = false
         elseif buttonText == "New Character" then
             local createCharacterPanel = vgui.Create("ResistanceRP.CharacterMenu")
@@ -52,12 +56,12 @@ function PANEL:Init()
     local backingImage = vgui.Create("DImage", self)
     backingImage:SetSize(ScrW(), ScrH())
     backingImage:Center()
-    backingImage:SetMaterial(ResistanceRP.GetMaterialFromImage(backingImage, "jQD3UKx"))
+    ResistanceRP.GetMaterialFromImage(backingImage, "jQD3UKx")
 
     local logo = vgui.Create("DImage", self)
     logo:SetSize(500, 500)
     logo:SetPos(0, (ScrH() - logo:GetTall()) / 2)
-    logo:SetMaterial(ResistanceRP.GetMaterialFromImage(logo, "sPwTrhU"))
+    ResistanceRP.GetMaterialFromImage(logo, "sPwTrhU")
 
     local buttonWidth = 200
     local buttonHeight = 30
